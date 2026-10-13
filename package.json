@@ -18,6 +18,7 @@
     "@google-cloud/cloud-sql-connector": "1.12.1",
     "@google-cloud/secret-manager": "7.2.0",
     "@google-cloud/storage": "8.4.0",
+    "@grpc/grpc-js": "1.14.6",
     "@pragmatic-tech-ai/todl": "file:../TODL",
     "@pragmatic-tech-ai/todl-identity": "file:../todl-identity",
     "@pragmatic-tech-ai/todl-platform-cloud": "file:../todl-platform-cloud",
@@ -25,7 +26,6 @@
     "pg": "8.23.1"
   },
   "devDependencies": {
-    "@grpc/grpc-js": "1.14.6",
     "@types/node": "^22.20.1",
     "@types/pg": "8.23.1",
     "pg-mem": "3.0.14",
