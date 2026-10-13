@@ -23,3 +23,21 @@ The compose file starts `fsouza/fake-gcs-server` over plain HTTP on port 4443 an
 `pragmatic-test` bucket by mounting `docker/gcs-seed` (each top-level directory there becomes a bucket).
 Set `PRAGMATIC_TEST_GCS_BUCKET` to target a different bucket. Each case writes under its own random
 `run-<id>/` key prefix and deletes it afterwards.
+
+## Running the gated Secret Manager test
+
+src/secrets/tests/gcp-secret-manager-live.test.ts drives GcpSecretManagerSecretStore through the real
+@google-cloud/secret-manager SDK and RealSecretManagerClient. It skips unless
+PRAGMATIC_TEST_GCP_SECRET_ENDPOINT is set (host:port or http://host:port).
+
+Against a plaintext-gRPC emulator such as blackwell-systems/gcp-secret-manager-emulator or localgcp:
+
+```
+PRAGMATIC_TEST_GCP_SECRET_ENDPOINT=localhost:9090 npx tsx --test src/secrets/tests/gcp-secret-manager-live.test.ts
+```
+
+Set PRAGMATIC_TEST_GCP_PROJECT to choose the project id (default test-project). The test connects with
+insecure (plaintext) gRPC credentials via @grpc/grpc-js (a dev dependency used only by this test), so it
+targets emulators or a plaintext proxy in front of a real GCP project (with Application Default
+Credentials on that proxy); use a throwaway project. Each case uses its own random run-<id>/ reference
+prefix and deletes every secret it created afterwards; a cleanup failure never masks an assertion failure.

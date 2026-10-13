@@ -4,16 +4,25 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "exports": { ".": { "import": "./dist/index.js", "types": "./dist/index.d.ts" } },
-  "scripts": { "build": "tsc -p tsconfig.build.json", "test": "tsx --test \"src/**/*.test.ts\"" },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "tsx --test \"src/**/*.test.ts\""
+  },
   "dependencies": {
-    "@pragmatic-tech-ai/todl": "file:../TODL",
-    "@pragmatic-tech-ai/todl-runtime": "file:../todl-runtime",
     "@google-cloud/secret-manager": "7.2.0",
     "@google-cloud/storage": "8.4.0",
-    "@pragmatic-tech-ai/todl-identity": "file:../todl-identity"
+    "@pragmatic-tech-ai/todl": "file:../TODL",
+    "@pragmatic-tech-ai/todl-identity": "file:../todl-identity",
+    "@pragmatic-tech-ai/todl-runtime": "file:../todl-runtime"
   },
   "devDependencies": {
+    "@grpc/grpc-js": "1.14.6",
     "@types/node": "^22.20.1",
     "tsx": "^4.0.0",
     "typescript": "^5.5.0"
