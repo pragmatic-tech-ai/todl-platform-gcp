@@ -1,0 +1,12 @@
+# Local GCS emulator for the gated conformance test (src/storage/tests/gcs-object-store-live.test.ts).
+# Run: docker compose -f docker-compose.emulators.yml up -d
+# The bucket "pragmatic-test" is pre-created by mounting ./docker/gcs-seed on /data: fake-gcs-server treats
+# each top-level directory under /data as a bucket. State is discarded when the container is removed.
+services:
+  fake-gcs:
+    image: fsouza/fake-gcs-server
+    command: ["-scheme", "http", "-port", "4443", "-external-url", "http://localhost:4443"]
+    ports:
+      - "4443:4443"
+    volumes:
+      - ./docker/gcs-seed:/data
