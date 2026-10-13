@@ -60,16 +60,33 @@ export class IStorageConformance
         {
             test(name, { skip: options.Skip }, async () =>
             {
+                let bodyError: unknown
                 try
                 {
                     await body(make())
                 }
-                finally
+                catch (error)
                 {
-                    if (options.Cleanup !== undefined)
+                    bodyError = error
+                }
+                if (options.Cleanup !== undefined)
+                {
+                    try
                     {
                         await options.Cleanup()
                     }
+                    catch (cleanupError)
+                    {
+                        // Never let a cleanup failure mask a real assertion error; surface it only on a clean body.
+                        if (bodyError === undefined)
+                        {
+                            bodyError = cleanupError
+                        }
+                    }
+                }
+                if (bodyError !== undefined)
+                {
+                    throw bodyError
                 }
             })
         }
