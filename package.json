@@ -9,6 +9,7 @@
   "dependencies": {
     "@pragmatic-tech-ai/todl": "file:../TODL",
     "@pragmatic-tech-ai/todl-runtime": "file:../todl-runtime",
+    "@google-cloud/secret-manager": "7.2.0",
     "@google-cloud/storage": "8.4.0",
     "@pragmatic-tech-ai/todl-identity": "file:../todl-identity"
   },
