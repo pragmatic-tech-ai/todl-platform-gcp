@@ -117,6 +117,49 @@ test('non-ASCII text round-trips losslessly (utf-8)', async () =>
     const text = 'héllo — 世界'
     await store.WriteText('u.txt', text)
     assert.equal(await store.ReadText('u.txt'), text)
+    assert.deepEqual([...(await store.ReadBytes('u.txt'))], [...new TextEncoder().encode(text)])
+})
+
+test('a leading BOM is preserved on text round-trip', async () =>
+{
+    const store = new GcsObjectStore(new FakeGcsBucket(), 'object://bucket')
+    await store.WriteText('f', '﻿abc')
+    assert.equal(await store.ReadText('f'), '﻿abc')
+})
+
+test('writing at the root key throws', async () =>
+{
+    const store = new GcsObjectStore(new FakeGcsBucket(), 'object://bucket')
+    await assert.rejects(() => store.WriteText('', 'x'), /root/)
+    await assert.rejects(() => store.WriteBytes('/', new Uint8Array(1)), /root/)
+})
+
+test('renaming a file to the root throws and does not lose the file', async () =>
+{
+    const store = new GcsObjectStore(new FakeGcsBucket(), 'object://bucket')
+    await store.WriteText('f.txt', 'v')
+    await assert.rejects(() => store.Rename('f.txt', ''), /root/)
+    assert.equal(await store.ReadText('f.txt'), 'v')
+})
+
+test('renaming a folder with a marker to the root drops the marker and keeps files', async () =>
+{
+    const store = new GcsObjectStore(new FakeGcsBucket(), 'object://bucket')
+    await store.CreateDirectory('from')
+    await store.WriteText('from/a.txt', '1')
+    await store.Rename('from', '')
+    assert.equal(await store.ReadText('a.txt'), '1')
+    assert.deepEqual([...(await store.List(''))].map(e => e.Name), ['a.txt'])
+})
+
+test('renaming into its own subtree works from a snapshot', async () =>
+{
+    const store = new GcsObjectStore(new FakeGcsBucket(), 'object://bucket')
+    await store.WriteText('a', 'A')
+    await store.WriteText('a/b', 'B')
+    await store.Rename('a', 'a/b')
+    assert.equal(await store.ReadText('a/b'), 'A')
+    assert.equal(await store.ReadText('a/b/b'), 'B')
 })
 
 test('directory markers are directories, never file entries', async () =>

@@ -8,6 +8,7 @@ import type { IGcsBucket } from './gcs-bucket.js'
 export class GcsObjectStore implements IStorage
 {
     private static readonly NotFoundPrefix = 'ENOENT: '
+    private static readonly RootWriteMessage = 'cannot write an object at the storage root'
     private static readonly Separator = '/'
     private static readonly PathSplitter = /[\\/]/
 
@@ -22,7 +23,7 @@ export class GcsObjectStore implements IStorage
 
     public async ReadText(path: string): Promise<string>
     {
-        return new TextDecoder().decode(await this.Require(path))
+        return new TextDecoder('utf-8', { ignoreBOM: true }).decode(await this.Require(path))
     }
 
     public ReadBytes(path: string): Promise<Uint8Array>
@@ -30,14 +31,14 @@ export class GcsObjectStore implements IStorage
         return this.Require(path)
     }
 
-    public WriteText(path: string, content: string): Promise<void>
+    public async WriteText(path: string, content: string): Promise<void>
     {
-        return this.bucket.Save(GcsObjectStore.Normalize(path), new TextEncoder().encode(content))
+        await this.bucket.Save(GcsObjectStore.WritableKey(path), new TextEncoder().encode(content))
     }
 
-    public WriteBytes(path: string, bytes: Uint8Array): Promise<void>
+    public async WriteBytes(path: string, bytes: Uint8Array): Promise<void>
     {
-        return this.bucket.Save(GcsObjectStore.Normalize(path), bytes)
+        await this.bucket.Save(GcsObjectStore.WritableKey(path), bytes)
     }
 
     public async Exists(path: string): Promise<boolean>
@@ -85,6 +86,7 @@ export class GcsObjectStore implements IStorage
         const src = GcsObjectStore.Normalize(from)
         const dst = GcsObjectStore.Normalize(to)
         const keys = await this.bucket.ListKeys()
+        const moves: { key: string, next: string, bytes: Uint8Array | undefined }[] = []
         for (const key of keys)
         {
             const isMarker = GcsObjectStore.IsMarker(key)
@@ -94,15 +96,22 @@ export class GcsObjectStore implements IStorage
             {
                 continue
             }
-            const next = isMarker ? (rewritten === '' ? '' : rewritten + GcsObjectStore.Separator) : rewritten
-            const bytes = await this.bucket.Download(key)
-            if (bytes !== undefined && next !== '')
+            if (rewritten === '' && !isMarker)
             {
-                await this.bucket.Save(next, bytes)
+                throw new Error(GcsObjectStore.RootWriteMessage)
             }
-            if (next !== key)
+            const next = isMarker ? (rewritten === '' ? '' : rewritten + GcsObjectStore.Separator) : rewritten
+            moves.push({ key, next, bytes: await this.bucket.Download(key) })
+        }
+        for (const move of moves)
+        {
+            await this.bucket.Delete(move.key)
+        }
+        for (const move of moves)
+        {
+            if (move.bytes !== undefined && move.next !== '')
             {
-                await this.bucket.Delete(key)
+                await this.bucket.Save(move.next, move.bytes)
             }
         }
     }
@@ -135,6 +144,16 @@ export class GcsObjectStore implements IStorage
             throw new Error(`${GcsObjectStore.NotFoundPrefix}${key}`)
         }
         return bytes
+    }
+
+    private static WritableKey(path: string): string
+    {
+        const key = GcsObjectStore.Normalize(path)
+        if (key === '')
+        {
+            throw new Error(GcsObjectStore.RootWriteMessage)
+        }
+        return key
     }
 
     private static IsMarker(key: string): boolean
