@@ -7,3 +7,6 @@ export { GcpSecretManagerSecretStore } from './secrets/gcp-secret-manager-secret
 export { RealSecretManagerClient } from './secrets/real-secret-manager-client.js'
 export { SecretRefEncoding } from './secrets/secret-ref-encoding.js'
 export type { ISecretManagerClient } from './secrets/secret-manager-client.js'
+export { GcpCloudBackends } from './platform/gcp-cloud-backends.js'
+export type { IGcpCloudBackendsConfig } from './platform/gcp-cloud-backends.js'
+export { CloudSqlPoolFactory } from './sql/cloud-sql-pool-factory.js'
