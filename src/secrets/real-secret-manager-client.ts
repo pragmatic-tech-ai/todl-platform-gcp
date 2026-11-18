@@ -11,11 +11,14 @@ export class RealSecretManagerClient implements ISecretManagerClient
     private static readonly SecretsSegment = '/secrets/'
     private static readonly LatestVersionSuffix = '/versions/latest'
     private static readonly Utf8 = 'utf8'
-    private static readonly Replication = { automatic: {} }
+    private static readonly AutomaticReplication = { automatic: {} }
 
+    /** replicaLocation, when given, pins new secrets to exactly one user-managed replica in that region
+     *  (e.g. 'europe-west3'); otherwise new secrets use automatic replication. */
     public constructor(
         private readonly client: SecretManagerServiceClient,
-        private readonly projectId: string)
+        private readonly projectId: string,
+        private readonly replicaLocation?: string)
     {
     }
 
@@ -50,7 +53,7 @@ export class RealSecretManagerClient implements ISecretManagerClient
             await this.client.createSecret({
                 parent: RealSecretManagerClient.ProjectsPrefix + this.projectId,
                 secretId,
-                secret: { replication: RealSecretManagerClient.Replication }
+                secret: { replication: this.Replication() }
             })
         }
         catch (e)
@@ -85,6 +88,13 @@ export class RealSecretManagerClient implements ISecretManagerClient
             }
             throw e
         }
+    }
+
+    private Replication(): object
+    {
+        return this.replicaLocation === undefined
+            ? RealSecretManagerClient.AutomaticReplication
+            : { userManaged: { replicas: [{ location: this.replicaLocation }] } }
     }
 
     private SecretPath(secretId: string): string

@@ -116,3 +116,14 @@ test('AddVersion passes a utf-8 Buffer to the secret parent', async () =>
     assert.ok(Buffer.isBuffer(req.payload.data))
     assert.equal(req.payload.data.toString('utf8'), 'va\nlue é')
 })
+
+test('EnsureSecret with a replica location creates a single user-managed replica there', async () =>
+{
+    const sdk = new StubSdk()
+    const client = new RealSecretManagerClient(sdk as unknown as SecretManagerServiceClient, 'proj', 'europe-west3')
+    await client.EnsureSecret('s1')
+    const replication = sdk.Calls[0]!.request.secret.replication
+    assert.equal(replication.automatic, undefined)
+    assert.equal(replication.userManaged.replicas.length, 1)
+    assert.equal(replication.userManaged.replicas[0].location, 'europe-west3')
+})
