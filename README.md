@@ -1,3 +1,7 @@
+> Archived 2026-11-20: moved to pragmatic-shared (packages/pragmatic-realm-gcp) as @pragmatic-tech-ai/pragmatic-realm-gcp.
+>
+> The package @pragmatic-tech-ai/todl-platform-gcp is retired. GitHub Packages does not support npm deprecate, so its published versions carry no deprecation flag; use the new package.
+
 # todl-platform-gcp
 
 GCP-backed platform adapters: `GcsObjectStore` (an `IStorage` over Google Cloud Storage via the narrow
